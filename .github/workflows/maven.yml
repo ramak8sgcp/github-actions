@@ -1,9 +1,12 @@
+If you want to cache add cache component , it will cache all maven packages
+
+==================================================================
+
 name: Java CI/CD Pipeline to Tomcat
 
 on:
   push:
-    branches:
-      - main   # Trigger on push to main branch
+    branches: [ main ]   # Trigger on push to main branch
 
 jobs:
   build:
@@ -30,13 +33,14 @@ jobs:
           else
             echo "Maven is already installed"
           fi
-          mvn -version
+          mvn --version
 
       # 4. Cache Maven dependencies
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
-          path: ~/.m2/repository
+          path: |
+            ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
@@ -45,7 +49,7 @@ jobs:
       - name: Build with Maven
         run: mvn clean package -DskipTests
 
-      # 6. Upload WAR artifact
+      # 6. Upload WAR as artifact (optional, for later jobs)
       - name: Upload WAR artifact
         uses: actions/upload-artifact@v4
         with:
@@ -69,11 +73,10 @@ jobs:
         run: |
           WAR_FILE=$(ls *.war)
           echo "Deploying $WAR_FILE to Tomcat..."
-          curl -v -u ${{ secrets.TOMCAT_USER }}:${{ secrets.TOMCAT_PASSWORD }} \
-          --upload-file "$WAR_FILE" \
-          "http://${{ secrets.TOMCAT_HOST }}/manager/text/deploy?path=/myapp&update=true"
+          curl -v --upload-file "$WAR_FILE" \
+          "http://${{ secrets.TOMCAT_USER }}:${{ secrets.TOMCAT_PASSWORD }}@${{ secrets.TOMCAT_HOST }}/"
 
-      # 9. Verify deployment
+      # 9. Optional: verify deployment
       - name: Verify deployment
         run: |
           curl -I http://${{ secrets.TOMCAT_HOST }}/myapp
