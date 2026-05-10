@@ -1,7 +1,3 @@
-If you want to cache add cache component , it will cache all maven packages
-
-==================================================================
-
 name: Java CI/CD Pipeline to Tomcat
 
 on:
